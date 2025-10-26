@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Palette Generator - 컬러 팔레트 생성기</title>
+  <meta name="description" content="랜덤 컬러 팔레트 생성, HEX/RGB/HSL 코드 복사, 그라데이션 미리보기 - 무료 온라인 도구">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #667eea;
+      --secondary: #764ba2;
+      --dark: #1a1a2e;
+      --light: #f8f9fa;
+      --success: #10b981;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      --shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem;
+      color: var(--dark);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ========== 헤더 ========== */
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 3rem;
+      animation: fadeInDown 0.6s ease-out;
+    }
+
+    header h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    header p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    /* ========== 컨트롤 패널 ========== */
+    .controls {
+      background: white;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.6s ease-out 0.2s both;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .control-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--dark);
+    }
+
+    .control-group select,
+    .control-group input[type="number"] {
+      width: 100%;
+      padding: 0.8rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .control-group select:focus,
+    .control-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 150px;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f1f3f5;
+      color: var(--dark);
+    }
+
+    .btn-secondary:hover {
+      background: #e9ecef;
+      transform: translateY(-2px);
+    }
+
+    /* ========== 팔레트 그리드 ========== */
+    .palette-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.6s ease-out 0.4s both;
+    }
+
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .color-card {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: all 0.3s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .color-card:hover {
+      transform: translateY(-10px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .color-preview {
+      height: 200px;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .color-info-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 600;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .color-card:hover .color-info-overlay {
+      opacity: 1;
+    }
+
+    .color-details {
+      padding: 1.5rem;
+    }
+
+    .color-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--dark);
+    }
+
+    .color-codes {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .code-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    .code-item:hover {
+      background: #e9ecef;
+    }
+
+    .code-label {
+      font-weight: 600;
+      color: #666;
+    }
+
+    .code-value {
+      color: var(--primary);
+      cursor: pointer;
+    }
+
+    .copy-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.3s;
+    }
+
+    .copy-btn:hover {
+      background: var(--secondary);
+      transform: scale(1.05);
+    }
+
+    .copy-btn.copied {
+      background: var(--success);
+    }
+
+    /* ========== 그라데이션 미리보기 ========== */
+    .gradient-preview {
+      background: white;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.6s ease-out 0.6s both;
+    }
+
+    .gradient-preview h2 {
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+    }
+
+    .gradient-box {
+      height: 150px;
+      border-radius: 15px;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gradient-code {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ========== 히스토리 ========== */
+    .history-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      animation: fadeInUp 0.6s ease-out 0.8s both;
+    }
+
+    .history-section h2 {
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+    }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 1rem;
+    }
+
+    .history-item {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    .history-item:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .history-item::after {
+      content: attr(data-color);
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .history-item:hover::after {
+      opacity: 1;
+    }
+
+    /* ========== 토스트 알림 ========== */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--success);
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      opacity: 0;
+      transform: translateY(100px);
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ========== 애니메이션 ========== */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ========== 반응형 ========== */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      header h1 {
+        font-size: 2rem;
+      }
+
+      .controls,
+      .palette-container,
+      .gradient-preview,
+      .history-section {
+        padding: 1.5rem;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        min-width: 100%;
+      }
+
+      .palette-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ========== CSS 변수 코드 섹션 ========== */
+    .css-variables {
+      background: white;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.6s ease-out 0.7s both;
+    }
+
+    .css-variables h2 {
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+    }
+
+    .css-code-box {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 1.5rem;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      position: relative;
+      overflow-x: auto;
+    }
+
+    .css-code-box pre {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .css-keyword {
+      color: #569cd6;
+    }
+
+    .css-property {
+      color: #9cdcfe;
+    }
+
+    .css-value {
+      color: #ce9178;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 헤더 -->
+    <header>
+      <h1>🎨 Color Palette Generator</h1>
+      <p>아름다운 컬러 조합을 만들어보세요</p>
+    </header>
+
+    <!-- 컨트롤 패널 -->
+    <div class="controls">
+      <div class="controls-grid">
+        <div class="control-group">
+          <label for="paletteType">팔레트 타입</label>
+          <select id="paletteType">
+            <option value="random">랜덤</option>
+            <option value="monochromatic">단색 조화</option>
+            <option value="analogous">유사색</option>
+            <option value="complementary">보색</option>
+            <option value="triadic">삼각 배색</option>
+            <option value="pastel">파스텔</option>
+            <option value="vibrant">비비드</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="colorCount">색상 개수</label>
+          <input type="number" id="colorCount" min="3" max="10" value="5">
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button class="btn btn-primary" id="generateBtn">
+          <span>🎲</span> 새로운 팔레트 생성
+        </button>
+        <button class="btn btn-secondary" id="exportBtn">
+          <span>💾</span> CSS 변수로 내보내기
+        </button>
+        <button class="btn btn-secondary" id="clearHistoryBtn">
+          <span>🗑️</span> 히스토리 초기화
+        </button>
+      </div>
+    </div>
+
+    <!-- 팔레트 그리드 -->
+    <div class="palette-container">
+      <h2>현재 팔레트</h2>
+      <div class="palette-grid" id="paletteGrid"></div>
+    </div>
+
+    <!-- 그라데이션 미리보기 -->
+    <div class="gradient-preview">
+      <h2>그라데이션 미리보기</h2>
+      <div class="gradient-box" id="gradientLinear"></div>
+      <div class="gradient-code">
+        <code id="gradientLinearCode"></code>
+        <button class="copy-btn" onclick="copyGradient('linear')">복사</button>
+      </div>
+      
+      <div class="gradient-box" id="gradientRadial"></div>
+      <div class="gradient-code">
+        <code id="gradientRadialCode"></code>
+        <button class="copy-btn" onclick="copyGradient('radial')">복사</button>
+      </div>
+    </div>
+
+    <!-- CSS 변수 코드 -->
+    <div class="css-variables" id="cssVariablesSection" style="display: none;">
+      <h2>CSS 변수 코드</h2>
+      <div class="css-code-box">
+        <pre id="cssVariablesCode"></pre>
+      </div>
+      <button class="btn btn-primary" style="margin-top: 1rem;" onclick="copyCSSVariables()">
+        <span>📋</span> CSS 코드 복사
+      </button>
+    </div>
+
+    <!-- 히스토리 -->
+    <div class="history-section">
+      <h2>색상 히스토리</h2>
+      <div class="history-grid" id="historyGrid"></div>
+    </div>
+  </div>
+
+  <!-- 토스트 알림 -->
+  <div class="toast" id="toast">
+    <span>✓</span>
+    <span id="toastMessage">복사되었습니다!</span>
+  </div>
+
+  <script>
+    // ========== 전역 변수 ==========
+    let currentPalette = [];
+    let colorHistory = JSON.parse(localStorage.getItem('colorHistory')) || [];
+
+    // ========== 색상 생성 함수 ==========
+    function generateRandomColor() {
+      return '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+    }
+
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255;
+      g /= 255;
+      b /= 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+        }
+      }
+
+      return {
+        h: Math.round(h * 360),
+        s: Math.round(s * 100),
+        l: Math.round(l * 100)
+      };
+    }
+
+    function hslToHex(h, s, l) {
+      s /= 100;
+      l /= 100;
+      const c = (1 - Math.abs(2 * l - 1)) * s;
+      const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+      const m = l - c/2;
+      let r = 0, g = 0, b = 0;
+
+      if (0 <= h && h < 60) {
+        r = c; g = x; b = 0;
+      } else if (60 <= h && h < 120) {
+        r = x; g = c; b = 0;
+      } else if (120 <= h && h < 180) {
+        r = 0; g = c; b = x;
+      } else if (180 <= h && h < 240) {
+        r = 0; g = x; b = c;
+      } else if (240 <= h && h < 300) {
+        r = x; g = 0; b = c;
+      } else if (300 <= h && h < 360) {
+        r = c; g = 0; b = x;
+      }
+
+      const toHex = (n) => {
+        const hex = Math.round((n + m) * 255).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      };
+
+      return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+
+    function getColorName(hex) {
+      const rgb = hexToRgb(hex);
+      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+      
+      const hue = hsl.h;
+      const sat = hsl.s;
+      const light = hsl.l;
+
+      let name = '';
+
+      // 밝기 판단
+      if (light > 90) name = '매우 밝은 ';
+      else if (light > 70) name = '밝은 ';
+      else if (light < 20) name = '매우 어두운 ';
+      else if (light < 40) name = '어두운 ';
+
+      // 채도 판단
+      if (sat < 10) return name + '회색';
+      if (sat < 30) name += '탁한 ';
+
+      // 색상 판단
+      if (hue < 15 || hue >= 345) name += '빨강';
+      else if (hue < 45) name += '주황';
+      else if (hue < 75) name += '노랑';
+      else if (hue < 150) name += '초록';
+      else if (hue < 200) name += '청록';
+      else if (hue < 250) name += '파랑';
+      else if (hue < 290) name += '보라';
+      else name += '자주';
+
+      return name;
+    }
+
+    // ========== 팔레트 생성 함수 ==========
+    function generatePalette() {
+      const type = document.getElementById('paletteType').value;
+      const count = parseInt(document.getElementById('colorCount').value);
+      let colors = [];
+
+      switch(type) {
+        case 'monochromatic':
+          const baseColor = generateRandomColor();
+          const baseRgb = hexToRgb(baseColor);
+          const baseHsl = rgbToHsl(baseRgb.r, baseRgb.g, baseRgb.b);
+          for (let i = 0; i < count; i++) {
+            const lightness = 20 + (i * (60 / count));
+            colors.push(hslToHex(baseHsl.h, baseHsl.s, lightness));
+          }
+          break;
+
+        case 'analogous':
+          const analogBase = Math.random() * 360;
+          for (let i = 0; i < count; i++) {
+            const hue = (analogBase + (i * 30)) % 360;
+            colors.push(hslToHex(hue, 70, 50));
+          }
+          break;
+
+        case 'complementary':
+          const compBase = Math.random() * 360;
+          for (let i = 0; i < count; i++) {
+            const hue = i % 2 === 0 ? compBase : (compBase + 180) % 360;
+            colors.push(hslToHex(hue, 70, 45 + (i * 5)));
+          }
+          break;
+
+        case 'triadic':
+          const triadBase = Math.random() * 360;
+          for (let i = 0; i < count; i++) {
+            const hue = (triadBase + (i * 120)) % 360;
+            colors.push(hslToHex(hue, 70, 50));
+          }
+          break;
+
+        case 'pastel':
+          for (let i = 0; i < count; i++) {
+            const hue = Math.random() * 360;
+            colors.push(hslToHex(hue, 50, 80));
+          }
+          break;
+
+        case 'vibrant':
+          for (let i = 0; i < count; i++) {
+            const hue = Math.random() * 360;
+            colors.push(hslToHex(hue, 90, 50));
+          }
+          break;
+
+        default: // random
+          for (let i = 0; i < count; i++) {
+            colors.push(generateRandomColor());
+          }
+      }
+
+      currentPalette = colors;
+      renderPalette();
+      updateGradients();
+      saveToHistory(colors);
+    }
+
+    // ========== 팔레트 렌더링 ==========
+    function renderPalette() {
+      const grid = document.getElementById('paletteGrid');
+      grid.innerHTML = '';
+
+      currentPalette.forEach((color, index) => {
+        const rgb = hexToRgb(color);
+        const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+        const colorName = getColorName(color);
+
+        const card = document.createElement('div');
+        card.className = 'color-card';
+        card.innerHTML = `
+          <div class="color-preview" style="background: ${color};">
+            <div class="color-info-overlay">${colorName}</div>
+          </div>
+          <div class="color-details">
+            <div class="color-name">${colorName}</div>
+            <div class="color-codes">
+              <div class="code-item">
+                <span class="code-label">HEX</span>
+                <span class="code-value" onclick="copyColor('${color}', 'HEX')">${color.toUpperCase()}</span>
+              </div>
+              <div class="code-item">
+                <span class="code-label">RGB</span>
+                <span class="code-value" onclick="copyColor('rgb(${rgb.r}, ${rgb.g}, ${rgb.b})', 'RGB')">
+                  ${rgb.r}, ${rgb.g}, ${rgb.b}
+                </span>
+              </div>
+              <div class="code-item">
+                <span class="code-label">HSL</span>
+                <span class="code-value" onclick="copyColor('hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)', 'HSL')">
+                  ${hsl.h}°, ${hsl.s}%, ${hsl.l}%
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // ========== 그라데이션 업데이트 ==========
+    function updateGradients() {
+      const colors = currentPalette.join(', ');
+      
+      // Linear gradient
+      const linearGradient = `linear-gradient(135deg, ${colors})`;
+      document.getElementById('gradientLinear').style.background = linearGradient;
+      document.getElementById('gradientLinearCode').textContent = `background: ${linearGradient};`;
+
+      // Radial gradient
+      const radialGradient = `radial-gradient(circle, ${colors})`;
+      document.getElementById('gradientRadial').style.background = radialGradient;
+      document.getElementById('gradientRadialCode').textContent = `background: ${radialGradient};`;
+    }
+
+    // ========== 복사 함수 ==========
+    function copyColor(value, type) {
+      navigator.clipboard.writeText(value).then(() => {
+        showToast(`${type} 코드가 복사되었습니다!`);
+      });
+    }
+
+    function copyGradient(type) {
+      const code = type === 'linear' 
+        ? document.getElementById('gradientLinearCode').textContent
+        : document.getElementById('gradientRadialCode').textContent;
+      
+      navigator.clipboard.writeText(code).then(() => {
+        showToast('그라데이션 코드가 복사되었습니다!');
+      });
+    }
+
+    function copyCSSVariables() {
+      const code = document.getElementById('cssVariablesCode').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        showToast('CSS 변수 코드가 복사되었습니다!');
+      });
+    }
+
+    // ========== 토스트 알림 ==========
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+      toastMessage.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // ========== 히스토리 관리 ==========
+    function saveToHistory(colors) {
+      colors.forEach(color => {
+        if (!colorHistory.includes(color)) {
+          colorHistory.unshift(color);
+          if (colorHistory.length > 50) {
+            colorHistory.pop();
+          }
+        }
+      });
+      localStorage.setItem('colorHistory', JSON.stringify(colorHistory));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const grid = document.getElementById('historyGrid');
+      grid.innerHTML = '';
+
+      colorHistory.forEach(color => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.style.background = color;
+        item.setAttribute('data-color', color);
+        item.onclick = () => copyColor(color, 'HEX');
+        grid.appendChild(item);
+      });
+    }
+
+    function clearHistory() {
+      if (confirm('히스토리를 모두 삭제하시겠습니까?')) {
+        colorHistory = [];
+        localStorage.removeItem('colorHistory');
+        renderHistory();
+        showToast('히스토리가 삭제되었습니다!');
+      }
+    }
+
+    // ========== CSS 변수 내보내기 ==========
+    function exportCSSVariables() {
+      const section = document.getElementById('cssVariablesSection');
+      const codeElement = document.getElementById('cssVariablesCode');
+      
+      let cssCode = '<span class="css-keyword">:root</span> {\n';
+      currentPalette.forEach((color, index) => {
+        cssCode += `  <span class="css-property">--color-${index + 1}</span>: <span class="css-value">${color}</span>;\n`;
+      });
+      cssCode += '}';
+
+      codeElement.innerHTML = cssCode;
+      section.style.display = 'block';
+      section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // ========== 이벤트 리스너 ==========
+    document.getElementById('generateBtn').addEventListener('click', generatePalette);
+    document.getElementById('exportBtn').addEventListener('click', exportCSSVariables);
+    document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+
+    // ========== 초기화 ==========
+    generatePalette();
+    renderHistory();
+
+    // 스페이스바로 새 팔레트 생성
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+        e.preventDefault();
+        generatePalette();
+      }
+    });
+  </script>
+</body>
+</html>
